@@ -7,4 +7,4 @@
 - The mouth was hardcoded with polygons one at a time...
 
 ## Final doodle
-![Final Doodle](CS3241%20Lab%201%20Doodle%20(MSVC)/Final.jpg)
+![Final Doodle](Final.jpg)
