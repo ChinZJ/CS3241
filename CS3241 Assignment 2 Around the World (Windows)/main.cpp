@@ -91,7 +91,7 @@ void init(void)
 	glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-
+float BASE_ANGULAR_SPEED = 48;
 // Data is generated and scaled from https://www.jpl.nasa.gov/edu/pdfs/scaless_reference.pdf
 void generatePlanets()
 {
@@ -105,23 +105,25 @@ void generatePlanets()
 
 	//Mercury
 	planetList[1].distFromRef = 2;
-	planetList[1].angularSpeed = 5;
+	planetList[1].angularSpeed = BASE_ANGULAR_SPEED * 365 / 88;
 	planetList[1].color[0] = 0.500;
 	planetList[1].color[1] = 0.320;
 	planetList[1].color[2] = 0.148;
 	planetList[1].size = 0.172;
+	planetList[1].angle = 9;
 
 	// Venus
 	planetList[2].distFromRef = 2.195;
-	planetList[2].angularSpeed = 5;
+	planetList[2].angularSpeed = BASE_ANGULAR_SPEED * 365 / 227;
 	planetList[2].color[0] = 0.734;
 	planetList[2].color[1] = 0.324;
 	planetList[2].color[2] = 0.0391;
 	planetList[2].size = 0.278;
+	planetList[2].angle = 236;
 
 	// Earth
 	planetList[3].distFromRef = 2.267;
-	planetList[3].angularSpeed = 5;
+	planetList[3].angularSpeed = BASE_ANGULAR_SPEED;
 	// Water
 	planetList[3].color[0] = 0.0352;
 	planetList[3].color[1] = 0.738;
@@ -131,18 +133,20 @@ void generatePlanets()
 	planetList[3].colorTwo[1] = 0.699;
 	planetList[3].colorTwo[2] = 0.328;
 	planetList[3].size = 0.287;
+	planetList[3].angle = 264;
 
 	// Mars
 	planetList[4].distFromRef = 2.411;
-	planetList[4].angularSpeed = 5;
+	planetList[4].angularSpeed = BASE_ANGULAR_SPEED * 365 / 687;
 	planetList[4].color[0] = 0.824;
 	planetList[4].color[1] = 0.313;
 	planetList[4].color[2] = 0.0430;
 	planetList[4].size = 0.2;
+	planetList[4].angle = 60;
 
 	// Jupiter
 	planetList[5].distFromRef = 3.404;
-	planetList[5].angularSpeed = 5;
+	planetList[5].angularSpeed = BASE_ANGULAR_SPEED * 365 / 4328;
 	planetList[5].color[0] = 0.715;
 	planetList[5].color[1] = 0.551;
 	planetList[5].color[2] = 0.371;
@@ -150,11 +154,12 @@ void generatePlanets()
 	planetList[3].colorTwo[0] = 0.859;
 	planetList[3].colorTwo[1] = 0.496;
 	planetList[3].colorTwo[2] = 0.246;
-	planetList[5].size = 2.202;
+	planetList[5].size = 1.402;
+	planetList[5].angle = 73;
 
 	// Saturn
 	planetList[6].distFromRef = 4.585;
-	planetList[6].angularSpeed = 5;
+	planetList[6].angularSpeed = BASE_ANGULAR_SPEED * 365 / 10767;
 	planetList[6].color[0] = 0.844;
 	planetList[6].color[1] = 0.656;
 	planetList[6].color[2] = 0.383;
@@ -162,23 +167,41 @@ void generatePlanets()
 	planetList[3].colorTwo[0] = 0.734;
 	planetList[3].colorTwo[1] = 0.617;
 	planetList[3].colorTwo[2] = 0.425;
-	planetList[6].size = 1.87;
+	planetList[6].size = 1.27;
+	planetList[6].angle = 261;
 
 	// Uranus
 	planetList[7].distFromRef = 7.179;
-	planetList[7].angularSpeed = 5;
+	planetList[7].angularSpeed = BASE_ANGULAR_SPEED * 365 / 30769;
 	planetList[7].color[0] = 0.422;
 	planetList[7].color[1] = 0.659;
 	planetList[7].color[2] = 0.707;
 	planetList[7].size = 0.851;
+	planetList[7].angle = 100;
 
 	// Neptune
 	planetList[8].distFromRef = 10.104;
-	planetList[8].angularSpeed = 5;
+	planetList[8].angularSpeed = BASE_ANGULAR_SPEED * 365 / 60225;
 	planetList[8].color[0] = 0.281;
 	planetList[8].color[1] = 0.625;
 	planetList[8].color[2] = 0.820;
 	planetList[8].size = 0.828;
+	planetList[8].angle = 14;
+}
+
+void drawPlanet(planet p, int circle_points, float angle)
+{
+	glPushMatrix();
+	glRotatef(p.angle, 0, 0, 1);
+	glTranslatef(0, p.distFromRef, 0);	
+	glBegin(GL_POLYGON);
+		for (int i = 0; i < circle_points; i++) {
+			angle = 2*PI*i/circle_points;
+			glColor4f(p.color[0], p.color[1], p.color[2], p.alpha);
+			glVertex2f(p.size * cos(angle), p.size * sin(angle));
+		}
+	glEnd();
+	glPopMatrix();
 }
 
 void display(void)
@@ -196,126 +219,31 @@ void display(void)
 	float angle = 0;
 
 	// Draw sun.
-	glPushMatrix();
-	glBegin(GL_POLYGON);
-		for (int i = 0; i < circle_points; i++) {
-			angle = 2*PI*i/circle_points;
-			glColor4f(planetList[0].color[0], planetList[0].color[1], planetList[0].color[2], planetList[0].alpha);
-			glVertex2f(planetList[0].size * cos(angle), planetList[0].size * sin(angle));
-		}
-	glEnd();
-	glPopMatrix();
+	drawPlanet(planetList[0], circle_points, angle);
 
 	//Draw Mercury
-	glPushMatrix();
-	glRotatef(planetList[1].angle, 0, 0, 1);
-	glTranslatef(0, planetList[1].distFromRef, 0);	
-	glBegin(GL_POLYGON);
-
-		for (int i = 0; i < circle_points; i++) 
-		{
-			angle = 2*PI*i/circle_points;
-			if(i>circle_points/2)
-				glColor4f(planetList[1].color[0], planetList[1].color[1], planetList[1].color[2], planetList[1].alpha);
-			else
-				glColor4f(planetList[1].color[0]-0.2, planetList[1].color[1]-0.2, planetList[1].color[2]-0.2, planetList[1].alpha);
-			glVertex2f(planetList[1].size * cos(angle), planetList[1].size *sin(angle));
-		}
-
-	glEnd();
-	glPopMatrix();
+	drawPlanet(planetList[1], circle_points, angle);
 
 	// Draw Venus
-	glPushMatrix();
-	glRotatef(planetList[2].angle, 0, 0, 1);
-	glTranslatef(0, planetList[2].distFromRef, 0);	
-	glBegin(GL_POLYGON);
-		for (int i = 0; i < circle_points; i++) {
-			angle = 2*PI*i/circle_points;
-			glColor4f(planetList[2].color[0], planetList[2].color[1], planetList[2].color[2], planetList[2].alpha);
-			glVertex2f(planetList[2].size * cos(angle), planetList[2].size * sin(angle));
-		}
-	glEnd();
-	glPopMatrix();
+	drawPlanet(planetList[2], circle_points, angle);
 
 	// Draw Earth
-	glPushMatrix();
-	glRotatef(planetList[3].angle, 0, 0, 1);
-	glTranslatef(0, planetList[3].distFromRef, 0);
-	glBegin(GL_POLYGON);
-		for (int i = 0; i < circle_points; i++) {
-			angle = 2*PI*i/circle_points;
-			glColor4f(planetList[3].color[0], planetList[3].color[1], planetList[3].color[2], planetList[3].alpha);
-			glVertex2f(planetList[3].size * cos(angle), planetList[3].size * sin(angle));
-		}
-	glEnd();
-	
-	glPopMatrix();
+	drawPlanet(planetList[3], circle_points, angle);
 
 	// Draw Mars
-	glPushMatrix();
-	glRotatef(planetList[4].angle, 0, 0, 1);
-	glTranslatef(0, planetList[4].distFromRef, 0);
-	glBegin(GL_POLYGON);
-		for (int i = 0; i < circle_points; i++) {
-			angle = 2*PI*i/circle_points;
-			glColor4f(planetList[4].color[0], planetList[4].color[1], planetList[4].color[2], planetList[4].alpha);
-			glVertex2f(planetList[4].size * cos(angle), planetList[4].size * sin(angle));
-		}
-	glEnd();
-	glPopMatrix();
+	drawPlanet(planetList[4], circle_points, angle);
 
 	// Draw Jupiter
-	glPushMatrix();
-	glRotatef(planetList[5].angle, 0, 0, 1);
-	glTranslatef(0, planetList[5].distFromRef, 0);
-	glBegin(GL_POLYGON);
-		for (int i = 0; i < circle_points; i++) {
-			angle = 2*PI*i/circle_points;
-			glColor4f(planetList[5].color[0], planetList[5].color[1], planetList[5].color[2], planetList[5].alpha);
-			glVertex2f(planetList[5].size * cos(angle), planetList[5].size * sin(angle));
-		}
-	glEnd();
-	glPopMatrix();
+	drawPlanet(planetList[5], circle_points, angle);
 
 	// Draw Saturn
-	glPushMatrix();
-	glRotatef(planetList[6].angle, 0, 0, 1);
-	glTranslatef(0, planetList[6].distFromRef, 0);
-	glBegin(GL_POLYGON);
-		for (int i = 0; i < circle_points; i++) {
-			angle = 2*PI*i/circle_points;
-			glColor4f(planetList[6].color[0], planetList[6].color[1], planetList[6].color[2], planetList[6].alpha);
-			glVertex2f(planetList[6].size * cos(angle), planetList[6].size * sin(angle));
-		}
-	glEnd();
-	glPopMatrix();
+	drawPlanet(planetList[6], circle_points, angle);
 
 	// Draw Uranus
-	glPushMatrix();
-	glRotatef(planetList[7].angle, 0, 0, 1);
-	glTranslatef(0, planetList[7].distFromRef, 0);
-	glBegin(GL_POLYGON);
-		for (int i = 0; i < circle_points; i++) {
-			angle = 2*PI*i/circle_points;
-			glColor4f(planetList[7].color[0], planetList[7].color[1], planetList[7].color[2], planetList[7].alpha);
-			glVertex2f(planetList[7].size * cos(angle), planetList[7].size * sin(angle));
-		}
-	glEnd();
-	glPopMatrix();
+	drawPlanet(planetList[7], circle_points, angle);
 
 	// Draw Neptune
-	glPushMatrix();
-	glRotatef(planetList[8].angle, 0, 0, 1);
-	glTranslatef(0, planetList[8].distFromRef, 0);
-	glBegin(GL_POLYGON);
-		for (int i = 0; i < circle_points; i++) {
-			angle = 2*PI*i/circle_points;
-			glColor4f(planetList[8].color[0], planetList[8].color[1], planetList[8].color[2], planetList[8].alpha);
-			glVertex2f(planetList[8].size * cos(angle), planetList[8].size * sin(angle));
-		}
-	glEnd();
-	glPopMatrix();
+	drawPlanet(planetList[8], circle_points, angle);
 
 
 	glPopMatrix();
