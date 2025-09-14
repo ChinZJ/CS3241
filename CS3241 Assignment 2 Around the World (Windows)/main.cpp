@@ -69,11 +69,35 @@ public:
 	}
 };
 
+class ufo
+{
+public:
+	float jumpHeight;
+	float jumpSpeed;
+	float currentHeight;
+	float size;
+	GLfloat color[3];
+	bool goingUp;
+
+	ufo() 
+	{
+		jumpHeight = 0.3;
+		jumpSpeed = 1.0;
+		currentHeight = 0.0;
+		size = 0.1;
+		color[0] = 0.5;  // Gray
+		color[1] = 0.5;
+		color[2] = 0.5;
+		goingUp = true;
+	}
+};
+
 GLfloat PI = 3.14;
 float alpha = 0.0, k=1;
 float tx = 0.0, ty=0.0;
 planet planetList[numPlanets];
 rocket earthRocket;
+ufo neptuneUfo;
 
 bool clockMode = false;
 
@@ -175,7 +199,7 @@ void generatePlanets()
 	planetList[5].colorTwo[0] = 0.859;
 	planetList[5].colorTwo[1] = 0.496;
 	planetList[5].colorTwo[2] = 0.246;
-	planetList[5].size = 1.402;
+	planetList[5].size = 1.002;
 	planetList[5].angle = 73;
 
 	// Saturn
@@ -188,11 +212,11 @@ void generatePlanets()
 	planetList[6].colorTwo[0] = 0.844;
 	planetList[6].colorTwo[1] = 0.656;
 	planetList[6].colorTwo[2] = 0.383;
-	planetList[6].size = 1.27;
+	planetList[6].size = 1.07;
 	planetList[6].angle = 261;
 
 	// Uranus
-	planetList[7].distFromRef = 8.079;
+	planetList[7].distFromRef = 8.279;
 	planetList[7].angularSpeed = BASE_ANGULAR_SPEED * 365 / 30769;
 	planetList[7].color[0] = 0.422;
 	planetList[7].color[1] = 0.659;
@@ -343,6 +367,43 @@ void drawRocket()
 	glPopMatrix();
 }
 
+void drawUfo()
+{
+	glPushMatrix();
+
+	// Calculate Neptune's actual position in world coordinates
+	float neptuneX = -planetList[8].distFromRef * sin(planetList[8].angle * PI / 180.0);
+	float neptuneY = planetList[8].distFromRef * cos(planetList[8].angle * PI / 180.0);
+	
+	// Move directly to Neptune's world position
+	glTranslatef(neptuneX, neptuneY, 0);
+	
+	// Move to top of Neptune (add planet size + jump height)
+	glTranslatef(0, planetList[8].size + neptuneUfo.currentHeight, 0);
+
+	glScalef(2.0, 2.0, 1.0);  
+
+	// UFO main body (ellipse)
+	glColor4f(neptuneUfo.color[0], neptuneUfo.color[1], neptuneUfo.color[2], 1.0);
+	glBegin(GL_POLYGON);
+		for (int i = 0; i < 20; i++) {
+			float angle = 2 * PI * i / 20;
+			glVertex2f(neptuneUfo.size * 1.5 * cos(angle), neptuneUfo.size * 0.5 * sin(angle));
+		}
+	glEnd();
+
+	// UFO dome (smaller circle on top)
+	glColor4f(0.7, 0.7, 0.9, 0.8);
+	glBegin(GL_POLYGON);
+		for (int i = 0; i < 15; i++) {
+			float angle = 2 * PI * i / 15;
+			glVertex2f(neptuneUfo.size * 0.8 * cos(angle), neptuneUfo.size * 0.3 * sin(angle) + neptuneUfo.size * 0.2);
+		}
+	glEnd();
+
+	glPopMatrix();
+}
+
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -385,6 +446,7 @@ void display(void)
 
 	// Draw Neptune
 	drawPlanet(planetList[8], circle_points, angle);
+	drawUfo();
 
 
 	glPopMatrix();
@@ -407,7 +469,6 @@ void idle()
 		}
 
 		earthRocket.currentAngle += earthRocket.orbitSpeed * timer;
-
 	}
 	else
 	{
@@ -419,11 +480,30 @@ void idle()
 		for (int i = 0; i < numPlanets; i++)
 		{
 			planetList[i].alpha = 1;
-			planetList[i].angle = ((float)timeinfo->tm_sec  )*6; // 6 degrees per second
+			
+			if (i % 2 == 1) {
+				// Odd indices forms second hand.
+				planetList[i].angle = -((float)timeinfo->tm_sec)*6; // 6 degrees per second
+			} else {
+				// Even indices forms hour hand, add minute increments using minutes.
+				planetList[i].angle = -(((float)(timeinfo->tm_hour % 12)) * 30 + ((float)timeinfo->tm_min) * 0.5);
+			}
 		}
 
 		// Milliseconds
 		earthRocket.currentAngle = ((float)timeinfo->tm_sec) * 6 + (clock() % 1000) * 0.36;
+	}
+
+	if (neptuneUfo.goingUp) {
+		neptuneUfo.currentHeight += neptuneUfo.jumpSpeed * timer;
+		if (neptuneUfo.currentHeight >= neptuneUfo.jumpHeight) {
+			neptuneUfo.goingUp = false;
+		}
+	} else {
+		neptuneUfo.currentHeight -= neptuneUfo.jumpSpeed * timer;
+		if (neptuneUfo.currentHeight <= 0.0) {
+			neptuneUfo.goingUp = true;
+		}
 	}
 	
 	glutPostRedisplay();
