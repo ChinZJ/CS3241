@@ -473,7 +473,6 @@ void idle()
 	else
 	{
 		// draw your clock here
-
 		seconds = time(NULL);
 		timeinfo = localtime(&seconds);
 
@@ -481,11 +480,13 @@ void idle()
 		{
 			planetList[i].alpha = 1;
 			
-			if (i % 2 == 1) {
-				// Odd indices forms second hand.
+			// Odd indices forms minute and second hand.
+			if (i == 1 || i == 3) {
 				planetList[i].angle = -((float)timeinfo->tm_sec)*6; // 6 degrees per second
+			} else if (i == 2 || i == 5 || i == 7) {
+				planetList[i].angle = -((float)timeinfo->tm_min)*6; // 6 degrees per minute
 			} else {
-				// Even indices forms hour hand, add minute increments using minutes.
+				// Rest forms hour hand, add minute increments using minutes.
 				planetList[i].angle = -(((float)(timeinfo->tm_hour % 12)) * 30 + ((float)timeinfo->tm_min) * 0.5);
 			}
 		}
