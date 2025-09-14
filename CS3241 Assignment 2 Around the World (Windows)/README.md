@@ -8,7 +8,7 @@
 - Ufo will always jump on top of Neptune with respect to the screen itself.
 
 ## Final doodle
-![Final Product](Final.mp4)
+![Final Product](Final.gif)
 
 ## Running (Windows)
 - Run `x64 Native Tools Command Prompt for VS 2019` as administrator
