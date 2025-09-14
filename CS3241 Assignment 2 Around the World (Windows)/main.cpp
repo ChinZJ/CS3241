@@ -105,7 +105,8 @@ void generatePlanets()
 
 	//Mercury
 	planetList[1].distFromRef = 2;
-	planetList[1].angularSpeed = BASE_ANGULAR_SPEED * 365 / 88;
+	// planetList[1].angularSpeed = BASE_ANGULAR_SPEED * 365 / 88;
+	planetList[1].angularSpeed = 0;
 	planetList[1].color[0] = 0.500;
 	planetList[1].color[1] = 0.320;
 	planetList[1].color[2] = 0.148;
@@ -114,7 +115,8 @@ void generatePlanets()
 
 	// Venus
 	planetList[2].distFromRef = 2.195;
-	planetList[2].angularSpeed = BASE_ANGULAR_SPEED * 365 / 227;
+	// planetList[2].angularSpeed = BASE_ANGULAR_SPEED * 365 / 227;
+	planetList[2].angularSpeed = 0;
 	planetList[2].color[0] = 0.734;
 	planetList[2].color[1] = 0.324;
 	planetList[2].color[2] = 0.0391;
@@ -123,7 +125,8 @@ void generatePlanets()
 
 	// Earth
 	planetList[3].distFromRef = 2.267;
-	planetList[3].angularSpeed = BASE_ANGULAR_SPEED;
+	// planetList[3].angularSpeed = BASE_ANGULAR_SPEED;
+	planetList[3].angularSpeed = 0;
 	// Water
 	planetList[3].color[0] = 0.0352;
 	planetList[3].color[1] = 0.738;
@@ -137,7 +140,8 @@ void generatePlanets()
 
 	// Mars
 	planetList[4].distFromRef = 2.411;
-	planetList[4].angularSpeed = BASE_ANGULAR_SPEED * 365 / 687;
+	// planetList[4].angularSpeed = BASE_ANGULAR_SPEED * 365 / 687;
+	planetList[4].angularSpeed = 0;
 	planetList[4].color[0] = 0.824;
 	planetList[4].color[1] = 0.313;
 	planetList[4].color[2] = 0.0430;
@@ -146,33 +150,36 @@ void generatePlanets()
 
 	// Jupiter
 	planetList[5].distFromRef = 3.404;
-	planetList[5].angularSpeed = BASE_ANGULAR_SPEED * 365 / 4328;
+	// planetList[5].angularSpeed = BASE_ANGULAR_SPEED * 365 / 4328;
+	planetList[5].angularSpeed = 0;
 	planetList[5].color[0] = 0.715;
 	planetList[5].color[1] = 0.551;
 	planetList[5].color[2] = 0.371;
 	// Rings
-	planetList[3].colorTwo[0] = 0.859;
-	planetList[3].colorTwo[1] = 0.496;
-	planetList[3].colorTwo[2] = 0.246;
+	planetList[5].colorTwo[0] = 0.859;
+	planetList[5].colorTwo[1] = 0.496;
+	planetList[5].colorTwo[2] = 0.246;
 	planetList[5].size = 1.402;
 	planetList[5].angle = 73;
 
 	// Saturn
 	planetList[6].distFromRef = 4.585;
-	planetList[6].angularSpeed = BASE_ANGULAR_SPEED * 365 / 10767;
-	planetList[6].color[0] = 0.844;
-	planetList[6].color[1] = 0.656;
-	planetList[6].color[2] = 0.383;
+	// planetList[6].angularSpeed = BASE_ANGULAR_SPEED * 365 / 10767;
+	planetList[6].angularSpeed = 0;
+	planetList[6].color[0] = 0.734;
+	planetList[6].color[1] = 0.617;
+	planetList[6].color[2] = 0.425;
 	// Darker regions
-	planetList[3].colorTwo[0] = 0.734;
-	planetList[3].colorTwo[1] = 0.617;
-	planetList[3].colorTwo[2] = 0.425;
+	planetList[6].colorTwo[0] = 0.844;
+	planetList[6].colorTwo[1] = 0.656;
+	planetList[6].colorTwo[2] = 0.383;
 	planetList[6].size = 1.27;
 	planetList[6].angle = 261;
 
 	// Uranus
 	planetList[7].distFromRef = 7.179;
-	planetList[7].angularSpeed = BASE_ANGULAR_SPEED * 365 / 30769;
+	// planetList[7].angularSpeed = BASE_ANGULAR_SPEED * 365 / 30769;
+	planetList[7].angularSpeed = 0;
 	planetList[7].color[0] = 0.422;
 	planetList[7].color[1] = 0.659;
 	planetList[7].color[2] = 0.707;
@@ -181,7 +188,8 @@ void generatePlanets()
 
 	// Neptune
 	planetList[8].distFromRef = 10.104;
-	planetList[8].angularSpeed = BASE_ANGULAR_SPEED * 365 / 60225;
+	// planetList[8].angularSpeed = BASE_ANGULAR_SPEED * 365 / 60225;
+	planetList[8].angularSpeed = 0;
 	planetList[8].color[0] = 0.281;
 	planetList[8].color[1] = 0.625;
 	planetList[8].color[2] = 0.820;
@@ -189,6 +197,7 @@ void generatePlanets()
 	planetList[8].angle = 14;
 }
 
+// Draws a sphere.
 void drawPlanet(planet p, int circle_points, float angle)
 {
 	glPushMatrix();
@@ -202,6 +211,87 @@ void drawPlanet(planet p, int circle_points, float angle)
 		}
 	glEnd();
 	glPopMatrix();
+}
+
+void drawSegments(planet p, int segments, int circle_points, float angle)
+{
+    glPushMatrix();
+    glRotatef(p.angle, 0, 0, 1);
+    glTranslatef(0, p.distFromRef, 0);
+    
+    // Height of each horizontal band
+    float bandHeight = (2.0f * p.size) / segments;
+    
+    for (int seg = 0; seg < segments; seg++) {
+        // Alternate colors between bands
+        if (seg % 2 == 0) {
+            glColor4f(p.color[0], p.color[1], p.color[2], p.alpha);
+        } else {
+            glColor4f(p.colorTwo[0], p.colorTwo[1], p.colorTwo[2], p.alpha);
+        }
+        
+        // Calculate y boundaries for this horizontal band
+        float yTop = p.size - (seg * bandHeight);
+        float yBottom = p.size - ((seg + 1) * bandHeight);
+        
+        // Draw the band as a series of quads that follow the circle's curve
+        glBegin(GL_QUAD_STRIP);
+			// Sample points along the x-axis
+			for (int i = 0; i <= circle_points; i++) {
+				// Go from left (-p.size) to right (+p.size)
+				float x = -p.size + (2.0f * p.size * i / circle_points);
+				
+				// For each x, calculate the corresponding y values on the circle
+				// Circle equation: x^2 + y^2 = r^2, so y = sqrt(r^2 - x^2)
+				float x_ratio = x / p.size;
+				
+				// Check if x is within the circle
+				if (x_ratio >= -1.0f && x_ratio <= 1.0f) {
+					float y_circle = p.size * sqrt(1.0f - x_ratio * x_ratio);
+					
+					// Clamp the band to stay within the circle
+					float y_top_clamped = yTop;
+					float y_bottom_clamped = yBottom;
+					
+					// Only draw if the band intersects with the circle at this x position
+					if (yTop >= -y_circle && yBottom <= y_circle) {
+						// Clamp top and bottom to circle boundary
+						if (y_top_clamped > y_circle) {
+							y_top_clamped = y_circle;
+						}
+						if (y_bottom_clamped < -y_circle) {
+							y_bottom_clamped = -y_circle;
+						}
+						
+						// Add vertices for the quad strip
+						glVertex2f(x, y_top_clamped);
+						glVertex2f(x, y_bottom_clamped);
+					}
+				}
+			}
+        glEnd();
+    }
+    glPopMatrix();
+}
+
+// Draws two triangle land masses
+void drawLand(planet p) 
+{
+    glPushMatrix();
+    glRotatef(p.angle, 0, 0, 1);
+    glTranslatef(0, p.distFromRef, 0);  // Move to planet position
+    glColor4f(p.colorTwo[0], p.colorTwo[1], p.colorTwo[2], p.alpha);
+    glBegin(GL_TRIANGLES);
+        glVertex2f(-0.02f, 0.0f); // bot
+		glVertex2f(0.12f, 0.15f); // top right
+		glVertex2f(-0.2f, 0.15f); // top left
+    glEnd();
+    glBegin(GL_TRIANGLES);
+        glVertex2f(-0.02f, 0.0f); // top
+        glVertex2f(0.0f, -0.2f); // bot
+        glVertex2f(0.15f, -0.075f); // right
+    glEnd();
+    glPopMatrix();
 }
 
 void display(void)
@@ -229,15 +319,16 @@ void display(void)
 
 	// Draw Earth
 	drawPlanet(planetList[3], circle_points, angle);
+	drawLand(planetList[3]);
 
 	// Draw Mars
 	drawPlanet(planetList[4], circle_points, angle);
 
 	// Draw Jupiter
-	drawPlanet(planetList[5], circle_points, angle);
+	drawSegments(planetList[5], 5, circle_points, angle);
 
 	// Draw Saturn
-	drawPlanet(planetList[6], circle_points, angle);
+	drawSegments(planetList[6], 3, circle_points, angle);
 
 	// Draw Uranus
 	drawPlanet(planetList[7], circle_points, angle);
