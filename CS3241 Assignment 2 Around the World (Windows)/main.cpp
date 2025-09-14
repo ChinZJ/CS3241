@@ -48,11 +48,32 @@ public:
 	}
 };
 
+class rocket
+{
+public:
+	float orbitRadius;
+	float orbitSpeed;
+	float currentAngle;
+	float size;
+	GLfloat color[3];
+
+	rocket()
+	{
+		orbitRadius = 0.5;
+		orbitSpeed = -100; // Rotate opposite direciton.
+		currentAngle = 0;
+		size = 0.15;
+		color[0] = 0.8;
+		color[1] = 0.8;
+		color[2] = 0.8;
+	}
+};
+
 GLfloat PI = 3.14;
 float alpha = 0.0, k=1;
 float tx = 0.0, ty=0.0;
 planet planetList[numPlanets];
-
+rocket earthRocket;
 
 bool clockMode = false;
 
@@ -105,8 +126,7 @@ void generatePlanets()
 
 	//Mercury
 	planetList[1].distFromRef = 2;
-	// planetList[1].angularSpeed = BASE_ANGULAR_SPEED * 365 / 88;
-	planetList[1].angularSpeed = 0;
+	planetList[1].angularSpeed = BASE_ANGULAR_SPEED * 365 / 88;
 	planetList[1].color[0] = 0.500;
 	planetList[1].color[1] = 0.320;
 	planetList[1].color[2] = 0.148;
@@ -115,8 +135,7 @@ void generatePlanets()
 
 	// Venus
 	planetList[2].distFromRef = 2.195;
-	// planetList[2].angularSpeed = BASE_ANGULAR_SPEED * 365 / 227;
-	planetList[2].angularSpeed = 0;
+	planetList[2].angularSpeed = BASE_ANGULAR_SPEED * 365 / 227;
 	planetList[2].color[0] = 0.734;
 	planetList[2].color[1] = 0.324;
 	planetList[2].color[2] = 0.0391;
@@ -124,9 +143,8 @@ void generatePlanets()
 	planetList[2].angle = 236;
 
 	// Earth
-	planetList[3].distFromRef = 2.267;
-	// planetList[3].angularSpeed = BASE_ANGULAR_SPEED;
-	planetList[3].angularSpeed = 0;
+	planetList[3].distFromRef = 2.567;
+	planetList[3].angularSpeed = BASE_ANGULAR_SPEED;
 	// Water
 	planetList[3].color[0] = 0.0352;
 	planetList[3].color[1] = 0.738;
@@ -139,9 +157,8 @@ void generatePlanets()
 	planetList[3].angle = 264;
 
 	// Mars
-	planetList[4].distFromRef = 2.411;
-	// planetList[4].angularSpeed = BASE_ANGULAR_SPEED * 365 / 687;
-	planetList[4].angularSpeed = 0;
+	planetList[4].distFromRef = 2.911;
+	planetList[4].angularSpeed = BASE_ANGULAR_SPEED * 365 / 687;
 	planetList[4].color[0] = 0.824;
 	planetList[4].color[1] = 0.313;
 	planetList[4].color[2] = 0.0430;
@@ -149,9 +166,8 @@ void generatePlanets()
 	planetList[4].angle = 60;
 
 	// Jupiter
-	planetList[5].distFromRef = 3.404;
-	// planetList[5].angularSpeed = BASE_ANGULAR_SPEED * 365 / 4328;
-	planetList[5].angularSpeed = 0;
+	planetList[5].distFromRef = 4.404;
+	planetList[5].angularSpeed = BASE_ANGULAR_SPEED * 365 / 4328;
 	planetList[5].color[0] = 0.715;
 	planetList[5].color[1] = 0.551;
 	planetList[5].color[2] = 0.371;
@@ -163,9 +179,8 @@ void generatePlanets()
 	planetList[5].angle = 73;
 
 	// Saturn
-	planetList[6].distFromRef = 4.585;
-	// planetList[6].angularSpeed = BASE_ANGULAR_SPEED * 365 / 10767;
-	planetList[6].angularSpeed = 0;
+	planetList[6].distFromRef = 6.585;
+	planetList[6].angularSpeed = BASE_ANGULAR_SPEED * 365 / 10767;
 	planetList[6].color[0] = 0.734;
 	planetList[6].color[1] = 0.617;
 	planetList[6].color[2] = 0.425;
@@ -177,9 +192,8 @@ void generatePlanets()
 	planetList[6].angle = 261;
 
 	// Uranus
-	planetList[7].distFromRef = 7.179;
-	// planetList[7].angularSpeed = BASE_ANGULAR_SPEED * 365 / 30769;
-	planetList[7].angularSpeed = 0;
+	planetList[7].distFromRef = 8.079;
+	planetList[7].angularSpeed = BASE_ANGULAR_SPEED * 365 / 30769;
 	planetList[7].color[0] = 0.422;
 	planetList[7].color[1] = 0.659;
 	planetList[7].color[2] = 0.707;
@@ -188,8 +202,7 @@ void generatePlanets()
 
 	// Neptune
 	planetList[8].distFromRef = 10.104;
-	// planetList[8].angularSpeed = BASE_ANGULAR_SPEED * 365 / 60225;
-	planetList[8].angularSpeed = 0;
+	planetList[8].angularSpeed = BASE_ANGULAR_SPEED * 365 / 60225;
 	planetList[8].color[0] = 0.281;
 	planetList[8].color[1] = 0.625;
 	planetList[8].color[2] = 0.820;
@@ -294,6 +307,42 @@ void drawLand(planet p)
     glPopMatrix();
 }
 
+void drawRocket()
+{
+	glPushMatrix();
+
+	glRotatef(planetList[3].angle, 0, 0, 1);
+	glTranslatef(0, planetList[3].distFromRef, 0);
+
+	glRotatef(earthRocket.currentAngle, 0, 0, 1);
+	glTranslatef(0, earthRocket.orbitRadius, 0);
+
+	if (clockMode) {
+		glRotatef(90, 0, 0, 1);
+	} else {
+		glRotatef(-90, 0, 0, 1);
+	}
+	
+
+	// Rocket body.
+	glColor4f(earthRocket.color[0], earthRocket.color[1], earthRocket.color[2], 1.0);
+    glBegin(GL_TRIANGLES);
+        glVertex2f(0.0f, earthRocket.size);           // Tip
+        glVertex2f(-earthRocket.size/2, -earthRocket.size/2);  // Left base
+        glVertex2f(earthRocket.size/2, -earthRocket.size/2);   // Right base
+    glEnd();
+
+	// Rocket flame.
+	glColor4f(1.0, 0.5, 0.0, 0.8);  // Orange flame
+    glBegin(GL_TRIANGLES);
+        glVertex2f(0.0f, -earthRocket.size/2);
+        glVertex2f(-earthRocket.size/3, -earthRocket.size);
+        glVertex2f(earthRocket.size/3, -earthRocket.size);
+    glEnd();
+
+	glPopMatrix();
+}
+
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -320,6 +369,7 @@ void display(void)
 	// Draw Earth
 	drawPlanet(planetList[3], circle_points, angle);
 	drawLand(planetList[3]);
+	drawRocket();
 
 	// Draw Mars
 	drawPlanet(planetList[4], circle_points, angle);
@@ -356,6 +406,8 @@ void idle()
 			planetList[i].angle += planetList[i].angularSpeed*timer;
 		}
 
+		earthRocket.currentAngle += earthRocket.orbitSpeed * timer;
+
 	}
 	else
 	{
@@ -369,6 +421,9 @@ void idle()
 			planetList[i].alpha = 1;
 			planetList[i].angle = ((float)timeinfo->tm_sec  )*6; // 6 degrees per second
 		}
+
+		// Milliseconds
+		earthRocket.currentAngle = ((float)timeinfo->tm_sec) * 6 + (clock() % 1000) * 0.36;
 	}
 	
 	glutPostRedisplay();
