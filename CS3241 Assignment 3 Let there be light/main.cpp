@@ -82,7 +82,6 @@ void drawSphere(double r)
 	int i, j;
 	int n = 20;
 
-	
 	/**
 	 * This was part of the original code, I am not sure what its purpose is as it disrupts the 
 	 * toggling settings provided via keyboard.
@@ -139,7 +138,67 @@ void drawSphere(double r)
 				glVertex3d(x4, y4, z4);
 			glEnd();
 		}
+}
 
+void drawLotusPetal(double length) 
+{
+    GLfloat mat_ambient[] = { 0.8f, 0.4f, 0.7f, 1.0f };
+    GLfloat mat_diffuse[] = { 0.9f, 0.5f, 0.8f, 1.0f };
+    GLfloat mat_specular[] = { 
+        m_Highlight ? 0.05f : 0.0f,
+        m_Highlight ? 0.05f : 0.0f,
+        m_Highlight ? 0.05f : 0.0f,
+        1.0f 
+    };
+    GLfloat mat_shininess[] = { m_Highlight ? 50.0f : 0.0f };
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+
+    // Create petal using scaled ellipsoid
+    glPushMatrix();
+    glScalef(0.3 * length, length, 0.15 * length); // Elongated shape
+    
+    int n = 50;
+    for (int i = 0; i < 2 * n; i++) {
+        for (int j = 0; j < n / 2; j++) {
+            glBegin(GL_POLYGON);
+            
+            double x1 = sin(i * M_PI / n) * sin(j * M_PI / n);
+            double y1 = cos(i * M_PI / n) * sin(j * M_PI / n);
+            double z1 = cos(j * M_PI / n);
+
+            double x2 = sin((i + 1) * M_PI / n) * sin(j * M_PI / n);
+            double y2 = cos((i + 1) * M_PI / n) * sin(j * M_PI / n);
+            double z2 = cos(j * M_PI / n);
+
+            double x3 = sin((i + 1) * M_PI / n) * sin((j + 1) * M_PI / n);
+            double y3 = cos((i + 1) * M_PI / n) * sin((j + 1) * M_PI / n);
+            double z3 = cos((j + 1) * M_PI / n);
+
+            double x4 = sin(i * M_PI / n) * sin((j + 1) * M_PI / n);
+            double y4 = cos(i * M_PI / n) * sin((j + 1) * M_PI / n);
+            double z4 = cos((j + 1) * M_PI / n);
+
+			// Invert normals to make the inside bright instead.
+            if (m_Smooth) {
+                glNormal3d(-x1, -y1, -z1);
+				glNormal3d(-x2, -y2, -z2);
+				glNormal3d(-x3, -y3, -z3);
+				glNormal3d(-x4, -y4, -z4);
+            }
+
+            glVertex3d(x1, y1, z1);
+            glVertex3d(x2, y2, z2);
+			glVertex3d(x3, y3, z3);
+			glVertex3d(x4, y4, z4);
+            
+            glEnd();
+        }
+    }
+    glPopMatrix();
 }
 
 void display(void)
@@ -158,7 +217,7 @@ void display(void)
 		drawSphere(1);
 		break;
 	case 1:
-		// draw your second primitive object here
+		drawLotusPetal(1);
 		break;
 	case 2:
 		// draw your first composite object here
