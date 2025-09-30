@@ -31,6 +31,15 @@ int moving, startx, starty;
 #define NO_OBJECT 4
 int current_object = 0;
 
+GLfloat nearPlane = 1.0;
+GLfloat farPlane = 80.0;
+GLfloat fovy = 40.0;
+
+// Camera position for gluLookAt
+GLfloat camX = 0.0, camY = 0.0, camZ = 0.0;
+GLfloat lookX = 0.0, lookY = 0.0, lookZ = -6.0;
+GLfloat upX = 0.0, upY = 1.0, upZ = 0.0;
+
 void setupLighting()
 {
 	glShadeModel(GL_SMOOTH);
@@ -105,16 +114,13 @@ void drawSphere(double r)
 				 * thus normals does not need to be manually calculated
 				 */
 				// Toggle smooth shading
-				if (m_Smooth) {
-					glNormal3d(x1, y1, z1);
-					glNormal3d(x2, y2, z2);
-					glNormal3d(x3, y3, z3);
-					glNormal3d(x4, y4, z4);
-				}
-
+				if (m_Smooth) glNormal3d(x1, y1, z1);
 				glVertex3d(x1, y1, z1);
+				if (m_Smooth) glNormal3d(x2, y2, z2);
 				glVertex3d(x2, y2, z2);
+				if (m_Smooth) glNormal3d(x3, y3, z3);
 				glVertex3d(x3, y3, z3);
+				if (m_Smooth) glNormal3d(x4, y4, z4);
 				glVertex3d(x4, y4, z4);
 			glEnd();
 		}
@@ -194,16 +200,13 @@ void drawLotusPetal(double length)
 				double z4 = cos((j + 1) * M_PI / n);
 
 				// Invert normals to make the inside bright instead.
-				if (m_Smooth) {
-					glNormal3d(-x1, -y1, -z1);
-					glNormal3d(-x2, -y2, -z2);
-					glNormal3d(-x3, -y3, -z3);
-					glNormal3d(-x4, -y4, -z4);
-				}
-
+				if (m_Smooth) glNormal3d(-x1, -y1, -z1);
 				setColorAndVertex(x1, y1, z1);
+				if (m_Smooth) glNormal3d(-x2, -y2, -z2);
 				setColorAndVertex(x2, y2, z2);
+				if (m_Smooth) glNormal3d(-x3, -y3, -z3);
 				setColorAndVertex(x3, y3, z3);
+				if (m_Smooth) glNormal3d(-x4, -y4, -z4);
 				setColorAndVertex(x4, y4, z4);
             
             glEnd();
@@ -315,9 +318,7 @@ void drawSpiderWeb() {
     glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 
     double octagonRadius = 4.0;
-    double strandThickness = 0.005;
     int numCircles = 30;
-    int numRadialLines = 80;
 
 	glScalef(0.5, 0.5, 0.5);
     
@@ -526,10 +527,26 @@ void drawSpider() {
 	}
 }
 
+void printCameraInfo()
+{
+    cout << "=== Camera Parameters ===" << endl;
+    cout << "Camera Position: (" << camX << ", " << camY << ", " << camZ << ")" << endl;
+    cout << "Look At: (" << lookX << ", " << lookY << ", " << lookZ << ")" << endl;
+    cout << "Up Vector: (" << upX << ", " << upY << ", " << upZ << ")" << endl;
+    cout << "Near Plane: " << nearPlane << endl;
+    cout << "Far Plane: " << farPlane << endl;
+    cout << "FOV Y: " << fovy << endl;
+    cout << "Angle: " << angle << endl;
+    cout << "Angle2: " << angle2 << endl;
+    cout << "Zoom: " << zoom << endl;
+    cout << "=========================" << endl << endl;
+}
+
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glPushMatrix();
+	gluLookAt(camX, camY, camZ, lookX, lookY, lookZ, upX, upY, upZ);
 	glTranslatef(0, 0, -6);
 
 	glRotatef(angle2, 1.0, 0.0, 0.0);
@@ -578,6 +595,13 @@ void display(void)
 	glutSwapBuffers();
 }
 
+void updateProjection() {
+	glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(fovy, (double)WINDOW_WIDTH / WINDOW_HEIGHT, nearPlane, farPlane);
+    glMatrixMode(GL_MODELVIEW);
+}
+
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
@@ -613,7 +637,84 @@ void keyboard(unsigned char key, int x, int y)
 	case 'q':
 		exit(0);
 		break;
+	case 'n':
+		nearPlane -= 0.1;
+		if (nearPlane < 0.1) nearPlane = 0.1;
+		updateProjection();
+		break;
+	case 'N':
+		nearPlane += 0.1;
+		updateProjection();
+		break;
+	case 'f':
+		farPlane -= 1.0;
+		if (farPlane < nearPlane + 1.0) farPlane = nearPlane + 1.0;
+		updateProjection();
+		break;
+	case 'F':
+		farPlane += 1.0;
+		updateProjection();
+		break;
+	case 'o':
+		fovy -= 1.0;
+		if (fovy < 1.0) fovy = 1.0;
+		updateProjection();
+		break;
+	case 'O':
+		fovy += 1.0;
+		if (fovy > 179.0) fovy = 179.0;
+		updateProjection();
+		break;
+	case 'r':
+		// Reset to initial parameters
+		nearPlane = 1.0;
+		farPlane = 80.0;
+		fovy = 40.0;
+		camX = 0.0; camY = 0.0; camZ = 0.0;
+		lookX = 0.0; lookY = 0.0; lookZ = -6.0;
+		upX = 0.0; upY = 1.0; upZ = 0.0;
+		angle = 0;
+		angle2 = 0;
+		zoom = 1.0;
+		updateProjection();
+		break;
+	case 'R':
+		// Custom viewing angle
+		if (current_object == 2) {
+			camX = 0.0; camY = 0.0; camZ = 0.0;
+			lookX = 0.0; lookY = 0.0; lookZ = -6.0;
+			upX = 0.0; upY = 1.0; upZ = 0.0;
 
+			angle = -1;
+			angle2 = 42;
+			zoom = 1.526;
+			updateProjection();
+			break;
+		} else if (current_object == 3) {
+			camX = 0.0; camY = 0.0; camZ = 0.0;
+			lookX = 0.0; lookY = 1.0; lookZ = -6.0;
+			upX = 0.0; upY = -1; upZ = 0.0;
+			
+			angle = 8;
+			angle2 = 44;
+			zoom = 0.754;
+			updateProjection();
+			break;
+		} else {
+			camX = 0.0; camY = 0.0; camZ = 0.0;
+			lookX = 0.0; lookY = 0.0; lookZ = -6.0;
+			upX = 0.0; upY = 1.0; upZ = 0.0;
+
+			angle = 0;
+			angle2 = 0;
+			zoom = 1;
+			updateProjection();
+		}
+		break;
+	case 'i':
+	case 'I':
+		printCameraInfo();
+		break;
 	default:
 		break;
 	}
