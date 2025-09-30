@@ -15,6 +15,9 @@
 
 using namespace std;
 
+#define WINDOW_WIDTH 1600
+#define WINDOW_HEIGHT 900
+
 // global variable
 
 bool m_Smooth = FALSE;
@@ -25,10 +28,8 @@ GLfloat zoom = 1.0;
 int mouseButton = 0;
 int moving, startx, starty;
 
-#define NO_OBJECT 4;
+#define NO_OBJECT 4
 int current_object = 0;
-
-using namespace std;
 
 void setupLighting()
 {
@@ -59,18 +60,83 @@ void setupLighting()
 
 void drawSphere(double r)
 {
+	// Draw a blue sphere
+	GLfloat mat_ambient[] = { 0.3f, 0.5f, 0.7f, 1.0f }; // I_a (ambient)
+	GLfloat mat_diffuse[] = { 0.3f, 0.5f, 0.7f, 1.0f }; // I_p (diffuse)
+	
+	// I_p (specular)
+	GLfloat mat_specular[] = { 
+		m_Highlight ? 1.0f : 0.0f,
+		m_Highlight ? 1.0f : 0.0f,
+		m_Highlight ? 1.0f : 0.0f,
+		1.0f 
+	};
+	GLfloat mat_shininess[] = { m_Highlight ? 50.0f : 0.0f }; // n, max 50
+
+	glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+
 	glScalef(r, r, r);
 	int i, j;
 	int n = 20;
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	for (i = 0; i < 2 * n; i++)
-		for (j = 0; j < n; j++)
+
+	
+	/**
+	 * This was part of the original code, I am not sure what its purpose is as it disrupts the 
+	 * toggling settings provided via keyboard.
+	 */
+	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	
+	for (i = 0; i < 2 * n; i++) // 2 * n longitude
+		for (j = 0; j < n; j++) // n latitude
 		{
 			glBegin(GL_POLYGON);
-			glVertex3d(sin(i * M_PI / n) * sin(j * M_PI / n), cos(i * M_PI / n) * sin(j * M_PI / n), cos(j * M_PI / n));
-			glVertex3d(sin((i + 1) * M_PI / n) * sin(j * M_PI / n), cos((i + 1) * M_PI / n) * sin(j * M_PI / n), cos(j * M_PI / n));
-			glVertex3d(sin((i + 1) * M_PI / n) * sin((j + 1) * M_PI / n), cos((i + 1) * M_PI / n) * sin((j + 1) * M_PI / n), cos((j + 1) * M_PI / n));
-			glVertex3d(sin(i * M_PI / n) * sin((j + 1) * M_PI / n), cos(i * M_PI / n) * sin((j + 1) * M_PI / n), cos((j + 1) * M_PI / n));
+				// Draw spherical coordinates and convert to catesian coordinates.
+				// Vertex 1
+				double x1 = sin(i * M_PI / n) * sin(j * M_PI / n);
+				double y1 = cos(i * M_PI / n) * sin(j * M_PI / n);
+				double z1 = cos(j * M_PI / n);
+
+				// Vertex 2
+				double x2 = sin((i + 1) * M_PI / n) * sin(j * M_PI / n);
+				double y2 = cos((i + 1) * M_PI / n) * sin(j * M_PI / n);
+				double z2 = cos(j * M_PI / n);
+
+				// Vertex 3
+				double x3 = sin((i + 1) * M_PI / n) * sin((j + 1) * M_PI / n);
+				double y3 = cos((i + 1) * M_PI / n) * sin((j + 1) * M_PI / n);
+				double z3 = cos((j + 1) * M_PI / n);
+
+				// Vertex 4
+				double x4 = sin(i * M_PI / n) * sin((j + 1) * M_PI / n);
+				double y4 = cos(i * M_PI / n) * sin((j + 1) * M_PI / n);
+				double z4 = cos((j + 1) * M_PI / n);
+				
+				/**
+				 * I was unable to start up sample.exe, thus I apologise if I have misinterpreted 
+				 * any of the instructions.
+				 * 
+				 * For a vertex (i, j). The normal vector is the normalized direction vector from
+				 * the center (origin) to the point.
+				 * Since the given radius is 1, the position vector itself is the unit normal vector.
+				 * Regardless, glEnable(GL_NORMALIZE) is already called in setupLighting, 
+				 * thus normals does not need to be manually calculated
+				 */
+				// Toggle smooth shading
+				if (m_Smooth) {
+					glNormal3d(x1, y1, z1);
+					glNormal3d(x2, y2, z2);
+					glNormal3d(x3, y3, z3);
+					glNormal3d(x4, y4, z4);
+				}
+
+				glVertex3d(x1, y1, z1);
+				glVertex3d(x2, y2, z2);
+				glVertex3d(x3, y3, z3);
+				glVertex3d(x4, y4, z4);
 			glEnd();
 		}
 
@@ -203,7 +269,7 @@ int main(int argc, char** argv)
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(600, 600);
+	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	glutInitWindowPosition(50, 50);
 	glutCreateWindow("CS3241 Assignment 3");
 	glClearColor(1.0, 1.0, 1.0, 1.0);
@@ -218,7 +284,7 @@ int main(int argc, char** argv)
 
 	glMatrixMode(GL_PROJECTION);
 	gluPerspective( /* field of view in degree */ 40.0,
-		/* aspect ratio */ 1.0,
+		/* aspect ratio */ (double) WINDOW_WIDTH / WINDOW_HEIGHT,
 		/* Z near */ 1.0, /* Z far */ 80.0);
 	glMatrixMode(GL_MODELVIEW);
 	glutMainLoop();
