@@ -61,8 +61,8 @@ void setupLighting()
 void drawSphere(double r)
 {
 	// Draw a blue sphere
-	GLfloat mat_ambient[] = { 0.3f, 0.5f, 0.7f, 1.0f }; // I_a (ambient)
-	GLfloat mat_diffuse[] = { 0.3f, 0.5f, 0.7f, 1.0f }; // I_p (diffuse)
+	GLfloat mat_ambient[] = { 0.7f, 0.6f, 0.1f, 1.0f }; // I_a (ambient)
+	GLfloat mat_diffuse[] = { 0.8f, 0.7f, 0.2f, 1.0f }; // I_p (diffuse)
 	
 	// I_p (specular)
 	GLfloat mat_specular[] = { 
@@ -80,7 +80,7 @@ void drawSphere(double r)
 
 	glScalef(r, r, r);
 	int i, j;
-	int n = 20;
+	int n = 80;
 
 	/**
 	 * This was part of the original code, I am not sure what its purpose is as it disrupts the 
@@ -140,6 +140,49 @@ void drawSphere(double r)
 		}
 }
 
+void drawCylinder(double radius, double height) 
+{
+    // Green stem material
+    GLfloat mat_ambient[] = { 0.1f, 0.4f, 0.1f, 1.0f };
+    GLfloat mat_diffuse[] = { 0.2f, 0.6f, 0.2f, 1.0f };
+    GLfloat mat_specular[] = { 
+        m_Highlight ? 0.1f : 0.0f,
+        m_Highlight ? 0.1f : 0.0f,
+        m_Highlight ? 0.1f : 0.0f,
+        1.0f 
+    };
+    GLfloat mat_shininess[] = { m_Highlight ? 10.0f : 0.0f };
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+
+    int n = 80;
+    glBegin(GL_QUAD_STRIP);
+		for (int i = 0; i <= n; i++) {
+			double angle = 2 * M_PI * i / n;
+			double x = radius * cos(angle);
+			double z = radius * sin(angle);
+			
+			if (m_Smooth) {
+				glNormal3d(x, 0, z);
+			}
+			glVertex3d(x, 0, z);
+			glVertex3d(x, height, z);
+		}
+    glEnd();
+}
+
+void setColorAndVertex(double x, double y, double z) {
+	double grad = (z + 1.0) / 2.0;
+	GLfloat r = (1.0 - grad) * 0.6 + grad * 0.8;
+	GLfloat g = (1.0 - grad) * 0.2 + grad * 0.4;
+	GLfloat b = (1.0 - grad) * 0.4 + grad * 0.6;
+	glColor3f(r, g, b);
+	glVertex3d(x, y, z);
+}
+
 void drawLotusPetal(double length) 
 {
     GLfloat mat_ambient[] = { 0.8f, 0.4f, 0.7f, 1.0f };
@@ -157,48 +200,107 @@ void drawLotusPetal(double length)
     glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
     glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
 
+	glEnable(GL_COLOR_MATERIAL);
+	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+
     // Create petal using scaled ellipsoid
     glPushMatrix();
     glScalef(0.3 * length, length, 0.15 * length); // Elongated shape
     
-    int n = 50;
+    int n = 80;
     for (int i = 0; i < 2 * n; i++) {
         for (int j = 0; j < n / 2; j++) {
             glBegin(GL_POLYGON);
             
-            double x1 = sin(i * M_PI / n) * sin(j * M_PI / n);
-            double y1 = cos(i * M_PI / n) * sin(j * M_PI / n);
-            double z1 = cos(j * M_PI / n);
+				double x1 = sin(i * M_PI / n) * sin(j * M_PI / n);
+				double y1 = cos(i * M_PI / n) * sin(j * M_PI / n);
+				double z1 = cos(j * M_PI / n);
 
-            double x2 = sin((i + 1) * M_PI / n) * sin(j * M_PI / n);
-            double y2 = cos((i + 1) * M_PI / n) * sin(j * M_PI / n);
-            double z2 = cos(j * M_PI / n);
+				double x2 = sin((i + 1) * M_PI / n) * sin(j * M_PI / n);
+				double y2 = cos((i + 1) * M_PI / n) * sin(j * M_PI / n);
+				double z2 = cos(j * M_PI / n);
 
-            double x3 = sin((i + 1) * M_PI / n) * sin((j + 1) * M_PI / n);
-            double y3 = cos((i + 1) * M_PI / n) * sin((j + 1) * M_PI / n);
-            double z3 = cos((j + 1) * M_PI / n);
+				double x3 = sin((i + 1) * M_PI / n) * sin((j + 1) * M_PI / n);
+				double y3 = cos((i + 1) * M_PI / n) * sin((j + 1) * M_PI / n);
+				double z3 = cos((j + 1) * M_PI / n);
 
-            double x4 = sin(i * M_PI / n) * sin((j + 1) * M_PI / n);
-            double y4 = cos(i * M_PI / n) * sin((j + 1) * M_PI / n);
-            double z4 = cos((j + 1) * M_PI / n);
+				double x4 = sin(i * M_PI / n) * sin((j + 1) * M_PI / n);
+				double y4 = cos(i * M_PI / n) * sin((j + 1) * M_PI / n);
+				double z4 = cos((j + 1) * M_PI / n);
 
-			// Invert normals to make the inside bright instead.
-            if (m_Smooth) {
-                glNormal3d(-x1, -y1, -z1);
-				glNormal3d(-x2, -y2, -z2);
-				glNormal3d(-x3, -y3, -z3);
-				glNormal3d(-x4, -y4, -z4);
-            }
+				// Invert normals to make the inside bright instead.
+				if (m_Smooth) {
+					glNormal3d(-x1, -y1, -z1);
+					glNormal3d(-x2, -y2, -z2);
+					glNormal3d(-x3, -y3, -z3);
+					glNormal3d(-x4, -y4, -z4);
+				}
 
-            glVertex3d(x1, y1, z1);
-            glVertex3d(x2, y2, z2);
-			glVertex3d(x3, y3, z3);
-			glVertex3d(x4, y4, z4);
+				setColorAndVertex(x1, y1, z1);
+				setColorAndVertex(x2, y2, z2);
+				setColorAndVertex(x3, y3, z3);
+				setColorAndVertex(x4, y4, z4);
             
             glEnd();
         }
     }
     glPopMatrix();
+	glDisable(GL_COLOR_MATERIAL);
+}
+
+void drawLotus(double cylRad, double cylHeight, double sphRad) {
+	// Stem
+	glPushMatrix();
+    glTranslatef(0, -1.7, 0);
+    drawCylinder(cylRad, cylHeight);
+    glPopMatrix();
+
+	// Stamen
+	glPushMatrix();
+    glTranslatef(0, -0.3, 0);
+    drawSphere(sphRad);
+    glPopMatrix();
+
+	// Petals
+	for (int i = 0; i < 5; i++) {
+        glPushMatrix();
+        glRotatef(35 + (i * 72.0), 0, 1, 0);
+        glTranslatef(0, -0.3, 0.5);
+        glRotatef(70, 1, 0, 0);
+		glRotatef(180, 0, 0, 1);
+        drawLotusPetal(0.8);
+        glPopMatrix();
+    }
+
+	for (int i = 0; i < 6; i++) {
+        glPushMatrix();
+        glRotatef(35 + (i * 60.0), 0, 1, 0);
+        glTranslatef(0, -0.1, 0.5);
+        glRotatef(45, 1, 0, 0);
+		glRotatef(180, 0, 0, 1);
+        drawLotusPetal(0.6);
+        glPopMatrix();
+    }
+
+	for (int i = 0; i < 4; i++) {
+        glPushMatrix();
+        glRotatef(i * 90.0, 0, 1, 0);
+        glTranslatef(0, -0.2, 0.3);
+		glRotatef(30, 1, 0, 0);
+		glRotatef(180, 0, 0, 1);
+        drawLotusPetal(0.45);
+        glPopMatrix();
+    }
+
+	for (int i = 0; i < 4; i++) {
+        glPushMatrix();
+        glRotatef(45 + (i * 90.0), 0, 1, 0);
+        glTranslatef(0, -0.1, 0.25);
+		glRotatef(15, 1, 0, 0);
+		glRotatef(180, 0, 0, 1);
+        drawLotusPetal(0.45);
+        glPopMatrix();
+    }
 }
 
 void display(void)
@@ -217,13 +319,19 @@ void display(void)
 		drawSphere(1);
 		break;
 	case 1:
+		
 		drawLotusPetal(1);
 		break;
 	case 2:
 		// draw your first composite object here
+		drawLotus(0.07, 1.5, 0.22);
 		break;
 	case 3:
 		// draw your second composite object here
+		
+		break;
+	case 4:
+		drawCylinder(0.2, 1);
 		break;
 	default:
 		break;
@@ -231,9 +339,6 @@ void display(void)
 	glPopMatrix();
 	glutSwapBuffers();
 }
-
-
-
 
 void keyboard(unsigned char key, int x, int y)
 {
