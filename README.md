@@ -13,7 +13,7 @@ Documentation of the work that I have done throughout the semester.
 ![Final Product](CS3241%20Assignment%202%20Around%20the%20World%20(Windows)/Final.gif)
 
 ## Lab 3 (Lighting)
-- [Link to folder](CS3241%20Assignment3%20Let%20there%20be%20light%20)  
+- [Link to folder](CS3241%20Assignment%203%20Let%20there%20be%20light)  
 
-![Final Product](CS3241%20Assignment3%20Let%20there%20be%20light%20/Lotus.png)
-![Final Product](CS3241%20Assignment3%20Let%20there%20be%20light%20/Spider.png)
+![Final Product](CS3241%20Assignment%203%20Let%20there%20be%20light/Lotus.png)
+![Final Product](CS3241%20Assignment%203%20Let%20there%20be%20light/Spider.png)
