@@ -1,6 +1,8 @@
 // Given that shadows are already implemented, 
 // step 5's shadows are dependent on the relatvie position of the objects and 
 // thus do not appear like how it is in the example.
+// Added translucency setting to the pyramid in scene 2.
+
 
 // CS3241Lab5.cpp 
 #include <cmath>
@@ -16,8 +18,6 @@ using namespace std;
 #define NUM_OBJECTS 4
 #define MAX_RT_LEVEL 50
 #define NUM_SCENE 2
-
-const double EPS = 1e-3;
 
 float* pixelBuffer = new float[WINWIDTH * WINHEIGHT * 3];
 
@@ -37,7 +37,7 @@ public:
 	double specularReflection[3] ;
 	double speN = 300;
 
-
+	double opacity = 1.0;
 };
 
 class Sphere : public RtObject {
@@ -88,7 +88,7 @@ private:
 		Vector3 h = cross_prod(ray.dir, e2);
 		double a = dot_prod(e1, h);
 		
-		if (fabs(a) < EPS) return false;
+		if (a == 0.0) return false;
 		
 		double f = 1.0 / a;
 		Vector3 s = ray.start - v0;
@@ -103,7 +103,7 @@ private:
 		
 		t = f * dot_prod(e2, q);
 		
-		if (t > EPS) {
+		if (t > 0.0) {
 			hitPoint = ray.start + ray.dir * t;
 			hitNormal = cross_prod(e1, e2);
 			hitNormal.normalize();
@@ -323,7 +323,7 @@ void rayTrace(Ray ray, double& r, double& g, double& b, int fromObj = -1 ,int le
 			if (j == closestObj) continue;  // Skip current object
 			
 			double shadowT = objList[j]->intersectWithRay(shadowRay, tempIntersection, tempNormal);
-			if (shadowT > EPS && shadowT < (lightDist - EPS)) {
+			if (shadowT > 0.0 && shadowT < lightDist) {
 				inShadow = true;
 				break;
 			}
@@ -379,6 +379,21 @@ void rayTrace(Ray ray, double& r, double& g, double& b, int fromObj = -1 ,int le
 		r += objList[closestObj]->specularReflection[0] * reflectR;
 		g += objList[closestObj]->specularReflection[1] * reflectG;
 		b += objList[closestObj]->specularReflection[2] * reflectB;
+
+		double op = objList[closestObj]->opacity;
+		if (op < 1.0 && level + 1 < MAX_RT_LEVEL) {
+			Ray transRay;
+			// avoid self-intersection
+			transRay.start = closestIntersection;
+			transRay.dir = ray.dir;
+			double transR = 0.0, transG = 0.0, transB = 0.0;
+			rayTrace(transRay, transR, transG, transB, closestObj, level + 1);
+
+			// Blend: finalColor = opacity * localColor + (1 - opacity) * transmittedColor
+			r = op * r + (1.0 - op) * transR;
+			g = op * g + (1.0 - op) * transG;
+			b = op * b + (1.0 - op) * transB;
+		}
 		
 		// Clamp values to [0, 1]
 		if (r > 1.0) r = 1.0;
@@ -572,6 +587,7 @@ void setScene(int i = 0)
 		objList[2]->specularReflection[1] = 0.4;
 		objList[2]->specularReflection[2] = 0.4;
 		objList[2]->speN = 300;
+		objList[2]->opacity = 0.4;
 
 		// Purple sphere
 		objList[3]->ambiantReflection[0] = 0.3;
