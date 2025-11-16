@@ -78,8 +78,8 @@ double Sphere::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal)
 	// Step 1
 	Vector3 oc = r.start - center_;
 
-	double alpha = dot_prod(r.dir, r.dir); // d . d
-	double beta = 2.0 * dot_prod(r.dir, oc); // 2d . (p - c)
+	double alpha = dot_prod(r.dir, r.dir); // d · d
+	double beta = 2.0 * dot_prod(r.dir, oc); // 2d · (p - c)
 	double gamma = dot_prod(oc, oc) - r_ * r_; // |p-c|^2 - r^2
 
 	double disc = beta * beta - 4 * alpha * gamma; // b^2 - 4ac
@@ -118,6 +118,13 @@ double Sphere::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal)
 void rayTrace(Ray ray, double& r, double& g, double& b, int fromObj = -1 ,int level = 0)
 {
 	// Step 4
+	// Stop at max level
+	if (level >= MAX_RT_LEVEL) {
+		r = bgColor[0];
+		g = bgColor[1];
+		b = bgColor[2];
+		return;
+	}
 
 	int goBackGround = 1, i = 0;
 
@@ -136,7 +143,7 @@ void rayTrace(Ray ray, double& r, double& g, double& b, int fromObj = -1 ,int le
 
 	for (i = 0; i < NUM_OBJECTS; i++)
 	{
-		if (i == fromObj) 
+		if (i == fromObj) // Skip current object
 		{
 			continue;
 		}
@@ -156,11 +163,12 @@ void rayTrace(Ray ray, double& r, double& g, double& b, int fromObj = -1 ,int le
 
 	// Intersection found
 	if (closestObj != -1) {
-		// Start with ambient component
+		// Start with ambient component (IPhong)
 		r = objList[closestObj]->ambiantReflection[0] * ambiantLight[0];
 		g = objList[closestObj]->ambiantReflection[1] * ambiantLight[1];
 		b = objList[closestObj]->ambiantReflection[2] * ambiantLight[2];
-		
+
+		// Step 3
 		// Shadow ray (intersection point to light source)
 		Vector3 lightDir = lightPos - closestIntersection;
 		double lightDist = lightDir.length();
@@ -183,7 +191,7 @@ void rayTrace(Ray ray, double& r, double& g, double& b, int fromObj = -1 ,int le
 			}
 		}
 		
-		// Diffuse and specular components
+		// Diffuse and specular components (not shadow)
 		if (!inShadow) {
 			// Diffuse component: kd * Id * (N·L)
 			double NdotL = dot_prod(closestNormal, lightDir);
@@ -210,6 +218,29 @@ void rayTrace(Ray ray, double& r, double& g, double& b, int fromObj = -1 ,int le
 				b += objList[closestObj]->specularReflection[2] * specularLight[2] * specular;
 			}
 		}
+
+		// Step 4
+		// ray, r = 2(N · (-i))N + i
+		// i = incoming ray direction
+		Vector3 incomingDir = ray.dir;
+		double NdotI = dot_prod(closestNormal, -incomingDir);
+		Vector3 reflectionDir = closestNormal * (2.0 * NdotI) + incomingDir;
+		reflectionDir.normalize();
+
+
+		// Reflection ray
+		Ray reflectionRay;
+		reflectionRay.start = closestIntersection;
+		reflectionRay.dir = reflectionDir;
+
+		// Recursive
+		double reflectR = 0, reflectG = 0, reflectB = 0;
+		rayTrace(reflectionRay, reflectR, reflectG, reflectB, closestObj, level + 1);
+
+		// Add weighted reflection ks * Ir
+		r += objList[closestObj]->specularReflection[0] * reflectR;
+		g += objList[closestObj]->specularReflection[1] * reflectG;
+		b += objList[closestObj]->specularReflection[2] * reflectB;
 		
 		// Clamp values to [0, 1]
 		if (r > 1.0) r = 1.0;
