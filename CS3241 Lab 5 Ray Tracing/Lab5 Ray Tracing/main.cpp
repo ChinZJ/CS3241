@@ -154,14 +154,68 @@ void rayTrace(Ray ray, double& r, double& g, double& b, int fromObj = -1 ,int le
 		}
 	}
 
-	if (closestObj != -1) 
-	{
-		// Color with ambient color
+	// Intersection found
+	if (closestObj != -1) {
+		// Start with ambient component
 		r = objList[closestObj]->ambiantReflection[0] * ambiantLight[0];
 		g = objList[closestObj]->ambiantReflection[1] * ambiantLight[1];
 		b = objList[closestObj]->ambiantReflection[2] * ambiantLight[2];
+		
+		// Shadow ray (intersection point to light source)
+		Vector3 lightDir = lightPos - closestIntersection;
+		double lightDist = lightDir.length();
+		lightDir.normalize();
+		
+		Ray shadowRay;
+		shadowRay.start = closestIntersection;
+		shadowRay.dir = lightDir;
 
-		// Step 3
+		// Shadow ray hit any object
+		bool inShadow = false;
+		Vector3 tempIntersection, tempNormal;
+		for (int j = 0; j < NUM_OBJECTS; j++) {
+			if (j == closestObj) continue;  // Skip current object
+			
+			double shadowT = objList[j]->intersectWithRay(shadowRay, tempIntersection, tempNormal);
+			if (shadowT > 0 && shadowT < lightDist) {
+				inShadow = true;
+				break;
+			}
+		}
+		
+		// Diffuse and specular components
+		if (!inShadow) {
+			// Diffuse component: kd * Id * (N·L)
+			double NdotL = dot_prod(closestNormal, lightDir);
+			if (NdotL > 0) {
+				r += objList[closestObj]->diffusetReflection[0] * diffusetLight[0] * NdotL;
+				g += objList[closestObj]->diffusetReflection[1] * diffusetLight[1] * NdotL;
+				b += objList[closestObj]->diffusetReflection[2] * diffusetLight[2] * NdotL;
+			}
+			
+			// Specular component: ks * Is * (R·V)^n
+			// R = 2(N·L)N - L
+			Vector3 reflectDir = closestNormal * (2.0 * NdotL) - lightDir;
+			reflectDir.normalize();
+			
+			// View direction (surface to camera)
+			Vector3 viewDir = ray.start - closestIntersection;
+			viewDir.normalize();
+			
+			double RdotV = dot_prod(reflectDir, viewDir);
+			if (RdotV > 0) {
+				double specular = pow(RdotV, objList[closestObj]->speN);
+				r += objList[closestObj]->specularReflection[0] * specularLight[0] * specular;
+				g += objList[closestObj]->specularReflection[1] * specularLight[1] * specular;
+				b += objList[closestObj]->specularReflection[2] * specularLight[2] * specular;
+			}
+		}
+		
+		// Clamp values to [0, 1]
+		if (r > 1.0) r = 1.0;
+		if (g > 1.0) g = 1.0;
+		if (b > 1.0) b = 1.0;
+		
 		goBackGround = 0;
 	}
 
