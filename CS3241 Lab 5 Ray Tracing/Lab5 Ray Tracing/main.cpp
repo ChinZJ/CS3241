@@ -1,8 +1,12 @@
 // Given that shadows are already implemented, 
 // step 5's shadows are dependent on the relatvie position of the objects and 
 // thus do not appear like how it is in the example.
+
+// Added pyramid object
+
 // Added translucency setting to the pyramid in scene 2.
 
+// Added bump mapping with sine waves, the pyramid itself looks kinda bad but the reflection looks comparably decent
 
 // CS3241Lab5.cpp 
 #include <cmath>
@@ -184,6 +188,49 @@ double Sphere::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal)
 	return t;
 }
 
+Vector3 applyBumpMapping(Vector3 hitPoint, Vector3 geometricNormal, double bumpStrength = 0.5) {
+    // Procedural bump using sine waves
+    double frequency = 20.0;  // Bump frequency
+    
+    // Calculate height field based on world position
+    double h = sin(hitPoint.x[0] * frequency) * sin(hitPoint.x[2] * frequency) * 
+               cos(hitPoint.x[1] * frequency * 0.5);
+    
+    // Calculate partial derivatives (gradient of height field)
+    double dhx = cos(hitPoint.x[0] * frequency) * frequency * 
+                 sin(hitPoint.x[2] * frequency) * cos(hitPoint.x[1] * frequency * 0.5);
+    double dhz = sin(hitPoint.x[0] * frequency) * 
+                 cos(hitPoint.x[2] * frequency) * frequency * 
+                 cos(hitPoint.x[1] * frequency * 0.5);
+    double dhy = sin(hitPoint.x[0] * frequency) * 
+                 sin(hitPoint.x[2] * frequency) * 
+                 (-sin(hitPoint.x[1] * frequency * 0.5)) * frequency * 0.5;
+    
+    // Find perpendicular vectors to create tangent space
+    Vector3 up(0, 1, 0);
+    Vector3 tangent = cross_prod(up, geometricNormal);
+    
+    // Handle case where normal is parallel to up vector
+    if (tangent.length() < 1e-6) {
+        up = Vector3(1, 0, 0);
+        tangent = cross_prod(up, geometricNormal);
+    }
+    tangent.normalize();
+    
+    Vector3 bitangent = cross_prod(geometricNormal, tangent);
+    bitangent.normalize();
+    
+    // Perturb normal based on gradient
+    Vector3 perturbedNormal = geometricNormal + 
+                              tangent * (dhx * bumpStrength) + 
+                              bitangent * (dhz * bumpStrength) +
+                              geometricNormal * (dhy * bumpStrength * 0.3);
+    perturbedNormal.normalize();
+    
+    return perturbedNormal;
+}
+
+
 double Pyramid::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal) {
 	double minT = DBL_MAX;
 	bool hit = false;
@@ -203,6 +250,8 @@ double Pyramid::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal) 
 			if (dot_prod(normal, toCenter) > 0) {
 				normal = -normal;
 			}
+			// Apply bump mapping
+			normal = applyBumpMapping(intersection, normal, 0.4);
 			hit = true;
 		}
 	}
@@ -217,6 +266,8 @@ double Pyramid::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal) 
 			if (dot_prod(normal, toCenter) > 0) {
 				normal = -normal;
 			}
+			// Apply bump mapping
+			normal = applyBumpMapping(intersection, normal, 0.4);
 			hit = true;
 		}
 	}
@@ -231,6 +282,8 @@ double Pyramid::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal) 
 			if (dot_prod(normal, toCenter) > 0) {
 				normal = -normal;
 			}
+			// Apply bump mapping
+			normal = applyBumpMapping(intersection, normal, 0.4);
 			hit = true;
 		}
 	}
@@ -245,6 +298,8 @@ double Pyramid::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal) 
 			if (dot_prod(normal, toCenter) > 0) {
 				normal = -normal;
 			}
+			// Apply bump mapping
+			normal = applyBumpMapping(intersection, normal, 0.4);
 			hit = true;
 		}
 	}
@@ -547,7 +602,7 @@ void setScene(int i = 0)
 		
 		// Blue pyramid (right front)
 		delete objList[2];
-		objList[2] = new Pyramid(Vector3(160, 40, 60), 50);
+		objList[2] = new Pyramid(Vector3(160, 40, 20), 100);
 		
 		// Purple (bottom)
 		((Sphere*)objList[3])->set(Vector3(0, -550, 80), 450);
@@ -587,7 +642,7 @@ void setScene(int i = 0)
 		objList[2]->specularReflection[1] = 0.4;
 		objList[2]->specularReflection[2] = 0.4;
 		objList[2]->speN = 300;
-		objList[2]->opacity = 0.4;
+		objList[2]->opacity = 0.7;
 
 		// Purple sphere
 		objList[3]->ambiantReflection[0] = 0.3;
