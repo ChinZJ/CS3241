@@ -85,7 +85,8 @@ double Sphere::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal)
 	double disc = beta * beta - 4 * alpha * gamma; // b^2 - 4ac
 
 	// No real roots
-	if (disc < 0) {
+	if (disc < 0) 
+	{
 		return -1;
 	}
 
@@ -94,11 +95,14 @@ double Sphere::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal)
 	double t2 = (-beta + sqrtDisc) / (2.0 * alpha);
 
 	double t;
-	if (t1 > 0) {
+	if (t1 > 0) 
+	{
 		t = t1;
-	} else if (t2 > 0) {
+	} else if (t2 > 0) 
+	{
 		t = t2;
-	} else {
+	} else 
+	{
 		return -1;
 	}
 
@@ -126,16 +130,39 @@ void rayTrace(Ray ray, double& r, double& g, double& b, int fromObj = -1 ,int le
 	Ray newRay;
 	double mint = DBL_MAX, t;
 
+	int closestObj = -1;
+	Vector3 closestIntersection, closestNormal;
 
-	// for (i = 0; i < NUM_OBJECTS; i++)
+
+	for (i = 0; i < NUM_OBJECTS; i++)
 	{
+		if (i == fromObj) 
+		{
+			continue;
+		}
+
 		if ((t = objList[i]->intersectWithRay(ray, intersection, normal)) > 0)
 		{
-			r = g = b = 1.0; 			// Step 2 
-
-			// Step 3
-			goBackGround = 0;
+			// Step 2 
+			// r = g = b = 1.0; 			
+			if (t < mint) {
+				mint = t;
+				closestObj = i;
+				closestIntersection = intersection;
+				closestNormal = normal;
+			}
 		}
+	}
+
+	if (closestObj != -1) 
+	{
+		// Color with ambient color
+		r = objList[closestObj]->ambiantReflection[0] * ambiantLight[0];
+		g = objList[closestObj]->ambiantReflection[1] * ambiantLight[1];
+		b = objList[closestObj]->ambiantReflection[2] * ambiantLight[2];
+
+		// Step 3
+		goBackGround = 0;
 	}
 
 	if (goBackGround)
