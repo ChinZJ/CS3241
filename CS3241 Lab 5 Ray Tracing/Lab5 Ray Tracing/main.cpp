@@ -1,3 +1,7 @@
+// Given that shadows are already implemented, 
+// step 5's shadows are dependent on the relatvie position of the objects and 
+// thus do not appear like how it is in the example.
+
 // CS3241Lab5.cpp 
 #include <cmath>
 #include <iostream>
@@ -12,6 +16,8 @@ using namespace std;
 #define NUM_OBJECTS 4
 #define MAX_RT_LEVEL 50
 #define NUM_SCENE 2
+
+const double EPS = 1e-3;
 
 float* pixelBuffer = new float[WINWIDTH * WINHEIGHT * 3];
 
@@ -44,6 +50,70 @@ public:
 	void set(Vector3 c, double r) { center_ = c; r_ = r; };
 	double intersectWithRay(Ray, Vector3& pos, Vector3& normal);
 };
+
+class Pyramid : public RtObject {
+	Vector3 vertices[4];  // 4 vertices for tetrahedron
+	Vector3 center_;
+	
+public:
+	Pyramid(Vector3 center, double size) {
+		center_ = center;
+		// Create tetrahedron vertices
+		double h = size * sqrt(2.0/3.0);  // height
+		vertices[0] = center + Vector3(0, h*0.6, 0);  // top
+		vertices[1] = center + Vector3(-size, -h*0.4, -size);  // base
+		vertices[2] = center + Vector3(size, -h*0.4, -size);   // base
+		vertices[3] = center + Vector3(0, -h*0.4, size);       // base
+	}
+	
+	Pyramid() {};
+	
+	void set(Vector3 center, double size) {
+		center_ = center;
+		double h = size * sqrt(2.0/3.0);
+		vertices[0] = center + Vector3(0, h*0.6, 0);
+		vertices[1] = center + Vector3(-size, -h*0.4, -size);
+		vertices[2] = center + Vector3(size, -h*0.4, -size);
+		vertices[3] = center + Vector3(0, -h*0.4, size);
+	}
+	
+	double intersectWithRay(Ray, Vector3& pos, Vector3& normal);
+	
+private:
+	// Intersect ray with triangle
+	bool intersectTriangle(Ray ray, Vector3 v0, Vector3 v1, Vector3 v2, 
+	                       double& t, Vector3& hitPoint, Vector3& hitNormal) {
+		Vector3 e1 = v1 - v0;
+		Vector3 e2 = v2 - v0;
+		Vector3 h = cross_prod(ray.dir, e2);
+		double a = dot_prod(e1, h);
+		
+		if (fabs(a) < EPS) return false;
+		
+		double f = 1.0 / a;
+		Vector3 s = ray.start - v0;
+		double u = f * dot_prod(s, h);
+		
+		if (u < 0.0 || u > 1.0) return false;
+		
+		Vector3 q = cross_prod(s, e1);
+		double v = f * dot_prod(ray.dir, q);
+		
+		if (v < 0.0 || u + v > 1.0) return false;
+		
+		t = f * dot_prod(e2, q);
+		
+		if (t > EPS) {
+			hitPoint = ray.start + ray.dir * t;
+			hitNormal = cross_prod(e1, e2);
+			hitNormal.normalize();
+			return true;
+		}
+		
+		return false;
+	}
+};
+
 
 RtObject **objList; // The list of all objects in the scene
 
@@ -112,6 +182,74 @@ double Sphere::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal)
 	normal.normalize();
 
 	return t;
+}
+
+double Pyramid::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal) {
+	double minT = DBL_MAX;
+	bool hit = false;
+	Vector3 tempIntersection, tempNormal;
+	double t;
+	
+	// Check all 4 faces of the tetrahedron
+	
+	// Face 1: bottom (vertices 1, 2, 3) - counterclockwise from below
+	if (intersectTriangle(r, vertices[1], vertices[3], vertices[2], t, tempIntersection, tempNormal)) {
+		if (t < minT) {
+			minT = t;
+			intersection = tempIntersection;
+			normal = tempNormal;
+			// Normal points outward
+			Vector3 toCenter = center_ - intersection;
+			if (dot_prod(normal, toCenter) > 0) {
+				normal = -normal;
+			}
+			hit = true;
+		}
+	}
+	
+	// Face 2: side 1 (vertices 0, 1, 2)
+	if (intersectTriangle(r, vertices[0], vertices[2], vertices[1], t, tempIntersection, tempNormal)) {
+		if (t < minT) {
+			minT = t;
+			intersection = tempIntersection;
+			normal = tempNormal;
+			Vector3 toCenter = center_ - intersection;
+			if (dot_prod(normal, toCenter) > 0) {
+				normal = -normal;
+			}
+			hit = true;
+		}
+	}
+	
+	// Face 3: side 2 (vertices 0, 2, 3)
+	if (intersectTriangle(r, vertices[0], vertices[3], vertices[2], t, tempIntersection, tempNormal)) {
+		if (t < minT) {
+			minT = t;
+			intersection = tempIntersection;
+			normal = tempNormal;
+			Vector3 toCenter = center_ - intersection;
+			if (dot_prod(normal, toCenter) > 0) {
+				normal = -normal;
+			}
+			hit = true;
+		}
+	}
+	
+	// Face 4: side 3 (vertices 0, 3, 1)
+	if (intersectTriangle(r, vertices[0], vertices[1], vertices[3], t, tempIntersection, tempNormal)) {
+		if (t < minT) {
+			minT = t;
+			intersection = tempIntersection;
+			normal = tempNormal;
+			Vector3 toCenter = center_ - intersection;
+			if (dot_prod(normal, toCenter) > 0) {
+				normal = -normal;
+			}
+			hit = true;
+		}
+	}
+	
+	return hit ? minT : -1;
 }
 
 
@@ -185,7 +323,7 @@ void rayTrace(Ray ray, double& r, double& g, double& b, int fromObj = -1 ,int le
 			if (j == closestObj) continue;  // Skip current object
 			
 			double shadowT = objList[j]->intersectWithRay(shadowRay, tempIntersection, tempNormal);
-			if (shadowT > 0 && shadowT < lightDist) {
+			if (shadowT > EPS && shadowT < (lightDist - EPS)) {
 				inShadow = true;
 				break;
 			}
@@ -332,7 +470,8 @@ void setScene(int i = 0)
 
 		((Sphere*)objList[0])->set(Vector3(-130, 80, 120), 100);
 		((Sphere*)objList[1])->set(Vector3(130, -80, -80), 100);
-		((Sphere*)objList[2])->set(Vector3(-130, -80, -80), 100);
+		delete objList[2];
+		objList[2] = new Sphere(Vector3(-130, -80, -80), 100);
 		((Sphere*)objList[3])->set(Vector3(130, 80, 120), 100);
 
 		objList[0]->ambiantReflection[0] = 0.1;
@@ -385,7 +524,66 @@ void setScene(int i = 0)
 	{
 
 		// Step 5
+		// Green sphere (left)
+		((Sphere*)objList[0])->set(Vector3(-60, 20, -200), 70);
+		
+		// Yellow sphere (right back)
+		((Sphere*)objList[1])->set(Vector3(150, 50, 250), 120);
+		
+		// Blue pyramid (right front)
+		delete objList[2];
+		objList[2] = new Pyramid(Vector3(160, 40, 60), 50);
+		
+		// Purple (bottom)
+		((Sphere*)objList[3])->set(Vector3(0, -550, 80), 450);
 
+		// Green sphere
+		objList[0]->ambiantReflection[0] = 0.1;
+		objList[0]->ambiantReflection[1] = 0.6;
+		objList[0]->ambiantReflection[2] = 0.1;
+		objList[0]->diffusetReflection[0] = 0.1;
+		objList[0]->diffusetReflection[1] = 1;
+		objList[0]->diffusetReflection[2] = 0.1;
+		objList[0]->specularReflection[0] = 0.3;
+		objList[0]->specularReflection[1] = 0.7;
+		objList[0]->specularReflection[2] = 0.3;
+		objList[0]->speN = 650;
+
+		// Yellow sphere
+		objList[1]->ambiantReflection[0] = 0.6;
+		objList[1]->ambiantReflection[1] = 0.6;
+		objList[1]->ambiantReflection[2] = 0.2;
+		objList[1]->diffusetReflection[0] = 1;
+		objList[1]->diffusetReflection[1] = 1;
+		objList[1]->diffusetReflection[2] = 0;
+		objList[1]->specularReflection[0] = 0.0;
+		objList[1]->specularReflection[1] = 0.0;
+		objList[1]->specularReflection[2] = 0.0;
+		objList[1]->speN = 50;
+
+		// Blue sphere
+		objList[2]->ambiantReflection[0] = 0.1;
+		objList[2]->ambiantReflection[1] = 0.4;
+		objList[2]->ambiantReflection[2] = 0.4;
+		objList[2]->diffusetReflection[0] = 0;
+		objList[2]->diffusetReflection[1] = 1;
+		objList[2]->diffusetReflection[2] = 1;
+		objList[2]->specularReflection[0] = 0.2;
+		objList[2]->specularReflection[1] = 0.4;
+		objList[2]->specularReflection[2] = 0.4;
+		objList[2]->speN = 300;
+
+		// Purple sphere
+		objList[3]->ambiantReflection[0] = 0.3;
+		objList[3]->ambiantReflection[1] = 0.3;
+		objList[3]->ambiantReflection[2] = 0.3;
+		objList[3]->diffusetReflection[0] = 0.7;
+		objList[3]->diffusetReflection[1] = 0.7;
+		objList[3]->diffusetReflection[2] = 0.7;
+		objList[3]->specularReflection[0] = 0.6;
+		objList[3]->specularReflection[1] = 0.6;
+		objList[3]->specularReflection[2] = 0.6;
+		objList[3]->speN = 650;
 	}
 }
 
