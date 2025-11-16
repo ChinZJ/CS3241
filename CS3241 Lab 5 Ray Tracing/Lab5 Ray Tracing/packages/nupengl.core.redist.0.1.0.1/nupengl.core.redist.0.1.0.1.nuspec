@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>nupengl.core.redist</id>
+    <version>0.1.0.1</version>
+    <title>NupenGL Core Redist</title>
+    <authors>Jonathan Dickinson,  Ali Badereddin</authors>
+    <owners>Jonathan Dickinson,  Ali Badereddin</owners>
+    <licenseUrl>https://cdn.rawgit.com/jcdickinson/NupenGL/master/License.txt</licenseUrl>
+    <projectUrl>https://github.com/jcdickinson/NupenGL</projectUrl>
+    <iconUrl>https://cdn.rawgit.com/jcdickinson/NupenGL/356c51d05d35426057b8465cd89e6b39f78361a1/icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Redistributable components for package 'nupengl.core'. This package should only be installed as a dependency. 
+(This is not the package you are looking for).</description>
+    <summary>Redistributable components for for package 'nupengl.core'</summary>
+    <releaseNotes>Initial Release.</releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags>Game OpenGL GLUT FreeGLUT GLFW GLEW nativepackage</tags>
+  </metadata>
+</package>

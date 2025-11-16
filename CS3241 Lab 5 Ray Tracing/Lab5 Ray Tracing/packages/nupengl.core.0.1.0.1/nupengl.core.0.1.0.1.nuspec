@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>nupengl.core</id>
+    <version>0.1.0.1</version>
+    <title>NupenGL Core</title>
+    <authors>Jonathan Dickinson,  Ali Badereddin</authors>
+    <owners>Jonathan Dickinson,  Ali Badereddin</owners>
+    <licenseUrl>https://cdn.rawgit.com/jcdickinson/NupenGL/master/License.txt</licenseUrl>
+    <projectUrl>https://github.com/jcdickinson/NupenGL</projectUrl>
+    <iconUrl>https://cdn.rawgit.com/jcdickinson/NupenGL/356c51d05d35426057b8465cd89e6b39f78361a1/icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>This library adds the various libraries to your project
+		that are required to build OpenGL applications on both the x86 and x64
+		architectures. Includes FreeGLUT, GLFW and GLEW.</description>
+    <summary>NupenGL allows you to access OpenGL from your application.</summary>
+    <releaseNotes>Initial Release.</releaseNotes>
+    <copyright>Copyright 2014</copyright>
+    <tags>Game OpenGL GLUT FreeGLUT GLFW GLEW nativepackage</tags>
+    <dependencies>
+      <dependency id="nupengl.core.redist" version="0.1.0.1" />
+    </dependencies>
+  </metadata>
+</package>
