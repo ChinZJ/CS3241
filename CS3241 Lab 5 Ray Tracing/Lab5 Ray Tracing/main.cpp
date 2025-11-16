@@ -76,8 +76,38 @@ double Sphere::intersectWithRay(Ray r, Vector3& intersection, Vector3& normal)
 {
 
 	// Step 1
+	Vector3 oc = r.start - center_;
 
-	return -1;
+	double alpha = dot_prod(r.dir, r.dir); // d . d
+	double beta = 2.0 * dot_prod(r.dir, oc); // 2d . (p - c)
+	double gamma = dot_prod(oc, oc) - r_ * r_; // |p-c|^2 - r^2
+
+	double disc = beta * beta - 4 * alpha * gamma; // b^2 - 4ac
+
+	// No real roots
+	if (disc < 0) {
+		return -1;
+	}
+
+	double sqrtDisc = sqrt(disc);
+	double t1 = (-beta - sqrtDisc) / (2.0 * alpha);
+	double t2 = (-beta + sqrtDisc) / (2.0 * alpha);
+
+	double t;
+	if (t1 > 0) {
+		t = t1;
+	} else if (t2 > 0) {
+		t = t2;
+	} else {
+		return -1;
+	}
+
+	intersection = r.start + r.dir * t;
+
+	normal = intersection - center_;
+	normal.normalize();
+
+	return t;
 }
 
 
@@ -97,7 +127,7 @@ void rayTrace(Ray ray, double& r, double& g, double& b, int fromObj = -1 ,int le
 	double mint = DBL_MAX, t;
 
 
-	//for (i = 0; i < NUM_OBJECTS; i++)
+	// for (i = 0; i < NUM_OBJECTS; i++)
 	{
 		if ((t = objList[i]->intersectWithRay(ray, intersection, normal)) > 0)
 		{
